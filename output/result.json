@@ -1,0 +1,17 @@
+{
+  "job_title": "Tidak disebutkan",
+  "required_skills": [
+    "python",
+    "sql",
+    "data analysis"
+  ],
+  "matching_skills": [
+    "python",
+    "sql"
+  ],
+  "missing_skills": [
+    "data analysis"
+  ],
+  "match_score": 67,
+  "recommendation": "Pertimbangkan"
+}
