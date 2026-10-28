@@ -1,52 +1,43 @@
 # Catatan Pembelajaran Proyek
 
-Dokumen ini mencatat konsep yang sudah diterapkan dalam kode serta hal yang masih perlu dipelajari dan diuji.
+Dokumen ini merangkum konsep yang sudah diterapkan pada Web V1 dan topik yang dapat dipelajari berikutnya.
 
-## Fase 1 — Python dan Struktur Proyek
+## 1. HTTP dan REST API
 
-### Sudah diterapkan
+HTTP membawa request dan response antara browser dan server. `GET /api/health` membaca status layanan; `POST /api/analyze` mengirim data untuk diproses. Status code seperti 200, 422, 502, 503, dan 504 memberi tahu hasil request secara konsisten.
 
-- Pembagian kode ke modul input, analyzer, schema, dan entry point.
-- Penggunaan virtualenv dan `requirements.txt` untuk dependensi.
-- Penggunaan `pathlib` untuk lokasi berkas dan `json` untuk output.
-- Penggunaan `.env` dan `.gitignore` untuk memisahkan kredensial lokal dari Git.
+## 2. JSON Request dan Response
 
-### Lanjutan
+Browser mengirim object JSON memakai `fetch()` dengan header `Content-Type: application/json`. FastAPI membaca body, memvalidasinya, lalu mengembalikan JSON untuk ditampilkan halaman.
 
-- Memastikan dependency freeze hanya mencakup paket yang dibutuhkan proyek dan menjaga kompatibilitas versi.
+## 3. FastAPI
 
-## Fase 2 — Integrasi LLM
+FastAPI menghubungkan path dan method HTTP ke fungsi Python. `response_model` mendokumentasikan dan memvalidasi bentuk response. `src.app:app` menjadi entrypoint lokal dan Vercel.
 
-### Sudah diterapkan
+## 4. Pydantic Validation
 
-- Provider dipilih melalui `LLM_PROVIDER`.
-- Mock, OpenAI, dan Gemini menerapkan kontrak analyzer yang sama.
-- Gemini memakai Google Gen AI SDK dan schema JSON; OpenAI memakai Responses API dengan schema Pydantic.
-- API key dibaca dari environment, dan model dikonfigurasi terpisah.
+`AnalyzeRequest` memastikan field wajib berupa teks, tidak kosong, tidak melebihi 100.000 karakter, dan tidak menerima field tambahan. `AnalysisResult` menetapkan schema keluaran.
 
-### Lanjutan
+## 5. Pemisahan Frontend dan Backend
 
-- Menangani rate limit, timeout, model overload, dan kuota secara konsisten.
-- Mengevaluasi kualitas ekstraksi judul dan skill terhadap contoh lowongan yang lebih beragam.
+Frontend mengumpulkan input, mengirim request, dan menampilkan loading/error/result. Backend memvalidasi input serta memanggil analyzer. Provider LLM melakukan ekstraksi dan pencocokan.
 
-## Fase 3 — Validasi dan Pengujian
+## 6. Environment Variables dan API Security
 
-### Sudah diterapkan
+Key provider tinggal di `.env` lokal atau setting environment server. `.env` di-ignore Git. Frontend tidak memuat key. Error HTTP tidak mengembalikan traceback, key, teks prompt, atau pesan sensitif SDK.
 
-- Input kosong ditolak sebelum dianalisis.
-- Pydantic memvalidasi bentuk hasil dan rentang skor.
-- Tes otomatis menguji pipeline serta adaptor provider menggunakan client tiruan.
-- Empat tes terakhir lulus tanpa mengirim request ke layanan AI.
+## 7. Dependency Management
 
-### Lanjutan
+`requirements.txt` mencatat dependency. FastAPI membuat API, Uvicorn menjalankan server lokal, dan HTTPX digunakan TestClient serta penanganan timeout/koneksi.
 
-- Tambahkan kasus untuk rekomendasi pada setiap batas skor, daftar skill kosong, kegagalan provider, dan format respons tidak valid.
-- Tambahkan integration test live yang dijalankan secara terpisah dan tercatat agar tidak bergantung pada layanan saat tes rutin.
+## 8. Serverless Deployment
 
-## Fase 4 — AI Agent
+Vercel mendeteksi FastAPI pada entrypoint yang dikenal dan menjalankan aplikasi sebagai function Python. Environment variable produksi diatur melalui dashboard Vercel. Cold start, durasi function, ukuran bundle, dan ketersediaan provider perlu diperhatikan.
 
-Implementasi sekarang adalah pipeline analisis dengan provider LLM. Sistem belum menjadi agent otonom: belum mencari lowongan sendiri, memakai tools, atau merencanakan beberapa langkah. Pengembangan agent dapat dilakukan setelah sumber lowongan, kebutuhan tools, dan batas tindakan ditentukan.
+## Hal untuk Diperdalam
 
-## Fase 5 — Status Integrasi Gemini
-
-Provider Gemini sudah ada di `src/gemini_llm.py`. Model `gemini-1.5-flash` yang sebelumnya terkonfigurasi sudah dihentikan, sehingga konfigurasi diperbarui ke model Gemini yang lebih baru. Percobaan live sempat menerima `503 UNAVAILABLE`; lihat `07-project-status.md` untuk status dan langkah berikutnya.
+- CORS dan kapan diperlukan; V1 menyajikan frontend dan API pada origin yang sama.
+- Rate limiting, abuse protection, dan batas ukuran request.
+- Observability tanpa mencatat isi profil atau job description.
+- Perbedaan deployment preview dan production di Vercel.
+- Pengujian timeout serta error provider pada staging.

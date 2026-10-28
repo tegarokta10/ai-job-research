@@ -6,28 +6,18 @@ Pencari kerja perlu membaca deskripsi lowongan dan membandingkan persyaratannya 
 
 ## Tujuan
 
-Membangun AI Job Research, sebuah pipeline yang menganalisis satu deskripsi pekerjaan terhadap satu profil kandidat dan menghasilkan ringkasan kecocokan dalam format JSON.
+Membangun AI Job Research Assistant yang menerima deskripsi pekerjaan dan profil kandidat, menganalisis kecocokan melalui LLM, lalu menampilkan ringkasan hasil melalui browser.
 
-## Ruang Lingkup Versi Saat Ini
+## Ruang Lingkup Web V1
 
-- Masukan dibaca dari `data/job_description.txt` dan `data/candidate_profile.txt`.
-- Analyzer dapat dipilih melalui `LLM_PROVIDER`: `mock`, `openai`, atau `gemini`.
-- Hasil ditulis ke `output/result.json`.
-- Judul lowongan, skill yang diminta, skill yang cocok, skill yang belum cocok, skor, dan rekomendasi dimasukkan ke hasil.
+- Pengguna menempelkan Job Description dan Candidate Profile melalui halaman web.
+- Frontend mengirim request JSON ke backend Python FastAPI.
+- Backend memvalidasi input dan memakai LLM provider yang sudah ada.
+- Provider dipilih melalui `LLM_PROVIDER`: `mock`, `gemini`, atau `openai`.
+- Hasil ditampilkan sebagai judul, skill, skor, dan rekomendasi.
 
-Versi saat ini adalah prototipe command line. Pencarian lowongan otomatis, antarmuka web, basis data, dan endpoint HTTP belum termasuk implementasi.
+Versi ini tidak mencari lowongan otomatis, tidak memiliki autentikasi, database, atau riwayat analisis. CLI lama tetap tersedia.
 
 ## Hasil yang Diharapkan
 
-```json
-{
-  "job_title": "Data Analyst",
-  "required_skills": ["python", "sql"],
-  "matching_skills": ["python"],
-  "missing_skills": ["sql"],
-  "match_score": 50,
-  "recommendation": "Pertimbangkan"
-}
-```
-
-Skor dihitung aplikasi dari proporsi skill wajib yang cocok. Rekomendasi memakai ambang yang ditetapkan di kode; hasil ini alat bantu evaluasi dan bukan keputusan perekrutan.
+Response analisis berupa JSON dengan `job_title`, `required_skills`, `matching_skills`, `missing_skills`, `match_score`, dan `recommendation`. Skor dihitung aplikasi berdasarkan proporsi skill wajib yang cocok. Hasil adalah alat bantu, bukan keputusan perekrutan.

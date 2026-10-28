@@ -2,50 +2,53 @@
 
 ## Komponen
 
-### Input Processor
+### Frontend
 
-`src/main.py` membaca `data/job_description.txt` dan `data/candidate_profile.txt`. `src/validator.py` memastikan kedua input berisi teks.
+`frontend/index.html`, `frontend/style.css`, dan `frontend/app.js` menyediakan form, loading state, tampilan hasil, dan pesan error. JavaScript mengirim `fetch('/api/analyze')`; API key tidak ada di browser.
+
+### API Backend
+
+`src/app.py` mengekspor FastAPI `app` dan menyediakan `GET /api/health` serta `POST /api/analyze`. Request divalidasi oleh Pydantic dan response memakai `AnalysisResult`.
+
+### Shared Analysis Flow
+
+`src/main.py` menyediakan `analyze_text()` untuk API dan CLI, serta `run_analysis()` untuk alur file-based lama. Kedua jalur menggunakan validasi dan analyzer yang sama.
 
 ### Analyzer Abstraction
 
-`src/llm.py` membaca `LLM_PROVIDER` dari environment atau `.env`, lalu memilih implementasi:
+`src/llm.py` memilih provider `mock`, `gemini`, atau `openai`. API dapat menerima analyzer injeksi untuk tes; jika tidak, provider mengikuti konfigurasi server. Tidak ada fallback otomatis.
 
-- `mock`: `src/mock_llm.py`, pencocokan kata kunci lokal untuk pengembangan offline.
-- `openai`: `src/openai_llm.py`, OpenAI Responses API dengan output terstruktur.
-- `gemini`: `src/gemini_llm.py`, Google Gen AI SDK dengan JSON terstruktur.
+### Schema dan Scoring
 
-### Result Schema dan Scoring
+`src/schemas.py` menormalkan skill, menghitung `missing_skills`, skor, dan rekomendasi. API mengembalikan Pydantic `AnalysisResult`.
 
-`src/schemas.py` mendefinisikan `AnalysisResult`, menormalkan nama skill, menghilangkan duplikasi, menghitung skill yang belum cocok, skor, dan rekomendasi. Skor serta rekomendasi dihitung aplikasi, bukan dipercaya dari keluaran model.
-
-### Output
-
-`src/main.py` menulis hasil tervalidasi sebagai JSON UTF-8 ke `output/result.json`.
-
-## Alur Data
+## Alur Request
 
 ```mermaid
-flowchart TD
-    U[Pengguna mengubah berkas input] --> M[src/main.py]
-    M --> V[Validasi teks]
-    V --> S[Pilih provider lewat LLM_PROVIDER]
-    S -->|mock| MOCK[src/mock_llm.py]
-    S -->|openai| OAI[src/openai_llm.py]
-    S -->|gemini| GEM[src/gemini_llm.py]
-    MOCK --> R[Normalisasi dan hitung skor]
-    OAI --> R
-    GEM --> R
-    R --> P[Validasi AnalysisResult]
-    P --> J[output/result.json]
+flowchart LR
+    B[Browser] -->|POST JSON| API[FastAPI /api/analyze]
+    API --> V[Validasi Pydantic]
+    V --> S[analyze_text]
+    S --> L[LLM Provider abstraction]
+    L -->|gemini| G[Gemini API]
+    L -->|openai| O[OpenAI API]
+    L -->|mock| M[Mock analyzer]
+    G --> R[AnalysisResult dan scoring lokal]
+    O --> R
+    M --> R
+    R -->|JSON| API
+    API --> B
+    B -->|GET /| UI[HTML/CSS/JavaScript]
 ```
 
-## Konfigurasi
+## Error Handling
 
-- Gemini membutuhkan `GEMINI_API_KEY` dan dapat memakai `GEMINI_MODEL`.
-- OpenAI membutuhkan `OPENAI_API_KEY` dan dapat memakai `OPENAI_MODEL`.
-- Provider `mock` tidak membutuhkan internet atau kredensial.
-- `.env` tidak boleh dimasukkan ke Git.
+- Request Pydantic tidak valid atau input kosong: `422`, tanpa echo input.
+- Timeout provider: `504`.
+- Gagal terhubung ke provider: `502`.
+- Gemini `429`: `429`; Gemini `503/504`: `503`.
+- Kesalahan tak terduga: `500` generik. Detail internal tidak dikirim ke browser.
 
-## Penanganan Kegagalan
+## Vercel
 
-Input kosong menghasilkan `ValueError`. Kegagalan jaringan atau provider live saat ini diteruskan oleh SDK dan dapat menghentikan eksekusi; pesan error ramah pengguna dan strategi retry aplikasi menjadi pekerjaan lanjutan.
+FastAPI app diekspor di `src/app.py`; `.python-version` memilih Python 3.14. Frontend disajikan dengan `StaticFiles`. Tidak ada database atau state request yang perlu dipersistenkan.

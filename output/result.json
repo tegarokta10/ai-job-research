@@ -1,21 +1,41 @@
 {
-  "job_title": "Data Analyst Game",
+  "job_title": "Tidak disebutkan",
   "required_skills": [
-    "python",
-    "sql",
-    "data analysis",
-    "unity programmer",
-    "game designer"
+    "redis",
+    "neural network",
+    "computer vision",
+    "data engineering",
+    "natural language processing (nlp)",
+    "machine learning",
+    "pattern recognition",
+    "deep learning",
+    "artificial intelligence (ai)",
+    "data mining",
+    "pemeliharaan dan pengelolaan infrastruktur jaringan",
+    "keamanan sistem",
+    "kemampuan analitis dan problem solving",
+    "ketelitian",
+    "komunikasi yang baik"
   ],
   "matching_skills": [
-    "python",
-    "sql",
-    "data analysis",
-    "unity programmer"
+    "artificial intelligence (ai)"
   ],
   "missing_skills": [
-    "game designer"
+    "redis",
+    "neural network",
+    "computer vision",
+    "data engineering",
+    "natural language processing (nlp)",
+    "machine learning",
+    "pattern recognition",
+    "deep learning",
+    "data mining",
+    "pemeliharaan dan pengelolaan infrastruktur jaringan",
+    "keamanan sistem",
+    "kemampuan analitis dan problem solving",
+    "ketelitian",
+    "komunikasi yang baik"
   ],
-  "match_score": 80,
-  "recommendation": "Cocok"
+  "match_score": 7,
+  "recommendation": "Kurang cocok"
 }

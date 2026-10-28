@@ -2,38 +2,46 @@
 
 ## Tujuan
 
-Memastikan input divalidasi, analyzer menghasilkan data terstruktur, judul lowongan dikenali, skor dihitung konsisten, dan hasil dapat disimpan ke JSON.
+Memastikan API memvalidasi input, memanggil analyzer yang diinjeksi, mengembalikan schema yang benar, melayani UI, serta mengubah error provider menjadi respons HTTP aman.
 
 ## Lingkungan
 
 - OS: Windows
-- Python: 3.14.4 pada virtualenv di direktori workspace induk
-- Framework: `unittest` dari standard library
-- Uji provider OpenAI dan Gemini memakai client tiruan; tidak mengirim request jaringan
+- Python: 3.14.4 pada virtualenv workspace induk
+- Framework tes: `unittest`; `pytest` juga tersedia
+- API test memakai `TestClient` dan fake analyzer; tidak memakai key atau mengirim request Gemini live
 
-Jalankan perintah dari direktori proyek:
+## Kasus Otomatis
 
-```powershell
+| Kasus | Hasil yang diharapkan |
+|---|---|
+| `GET /api/health` | HTTP 200 dan `{"status":"ok"}` |
+| Job Description kosong | HTTP 422, error menyebut field tanpa mengulang teks input |
+| Candidate Profile kosong | HTTP 422 |
+| Body JSON malformed | HTTP 422 terkontrol |
+| Request valid dengan fake analyzer | HTTP 200 dan response valid sebagai `AnalysisResult` |
+| Gemini 503 | HTTP 503 generik tanpa detail upstream |
+| Provider timeout | HTTP 504 generik |
+| Provider gagal koneksi | HTTP 502 generik |
+| Frontend dan JavaScript | Halaman dan aset dapat diakses |
+| Pipeline/adapter lama | Mock, Gemini, OpenAI, dan validasi pipeline tetap berjalan dengan fake/mock |
+
+## Hasil Eksekusi
+
+Pada 29 Oktober 2026:
+
+```text
 ..\.venv\Scripts\python.exe -m unittest discover -s tests -v
+Ran 13 tests — OK
+
+..\.venv\Scripts\python.exe -m pytest -v
+13 passed, 2 warnings
 ```
 
-## Kasus Pengujian Otomatis
+Peringatan pytest terdiri dari deprecation warning pada Google Gen AI SDK dan cache warning karena lingkungan tidak mengizinkan pembuatan direktori `.pytest_cache`; semua tes tetap lulus.
 
-| ID | Kasus | Hasil yang diharapkan |
-|---|---|---|
-| TC-01 | Input kosong | Validasi melempar `ValueError` |
-| TC-02 | Lowongan memiliki skill cocok dan tidak cocok | Daftar skill, skor, dan rekomendasi sesuai input |
-| TC-03 | Judul memiliki label `Posisi:` | Judul diekstrak dengan benar |
-| TC-04 | Pipeline memakai berkas masukan dan output sementara | JSON berisi field skema dan tersimpan di lokasi output |
-| TC-05 | Provider OpenAI diberi client tiruan | Hasil OpenAI diproses tanpa jaringan |
-| TC-06 | Provider Gemini diberi client tiruan | Hasil Gemini diproses tanpa jaringan |
+## Verifikasi yang Belum Dilakukan
 
-## Hasil Terakhir
-
-Pada 28 Oktober 2026, perintah otomatis di atas menghasilkan **4 tes lulus dan 0 gagal**. Cakupannya meliputi input kosong, pipeline dan `job_title`, serta adaptor OpenAI dan Gemini dengan client tiruan.
-
-`output/result.json` saat dokumen ini diperbarui berisi hasil untuk lowongan **Data Analyst Game**: 5 skill wajib, 4 cocok, skor **80**, rekomendasi **Cocok**. Skema output belum menyimpan nama provider maupun waktu eksekusi.
-
-## Uji Provider Live
-
-Dalam percobaan live Gemini pada 28 Oktober 2026, API dua kali mengembalikan `503 UNAVAILABLE` karena model sedang ramai. File hasil yang saat ini tersedia tidak membuktikan bahwa percobaan tersebut berhasil; ulangi `python src/main.py` untuk memastikan hasil live terbaru. Panggilan live mengirim deskripsi pekerjaan dan profil kandidat ke penyedia model serta dapat memakai kuota akun.
+- Belum ada browser manual test lintas browser/resolusi.
+- Tes API menggunakan fake analyzer; belum ada tes end-to-end web yang mengirim input browser ke Gemini live.
+- Deployment Vercel belum dilakukan.

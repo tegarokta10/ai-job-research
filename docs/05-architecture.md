@@ -1,35 +1,42 @@
-# Arsitektur Sistem
+# Arsitektur Web V1
 
 ## Ringkasan
 
-AI Job Research adalah pipeline command line yang membandingkan deskripsi pekerjaan dengan profil kandidat, menghitung skor kecocokan, lalu menyimpan hasil JSON.
+Web V1 memakai satu aplikasi FastAPI untuk API dan penyajian halaman. Browser berkomunikasi dengan backend; backend memakai provider analyzer yang sudah dimiliki proyek.
 
-## Lapisan Sistem
+## Lapisan
 
-1. **Input** — `data/job_description.txt` dan `data/candidate_profile.txt`.
-2. **Validasi** — `src/validator.py` menolak input kosong.
-3. **Provider** — `src/llm.py` memilih mock, Gemini, atau OpenAI.
-4. **Analisis** — provider menghasilkan judul, skill wajib, dan skill cocok.
-5. **Schema dan scoring** — `src/schemas.py` menormalkan data dan menghitung skor/rekomendasi.
-6. **Output** — `src/main.py` menyimpan `output/result.json`.
+1. **Frontend** — `frontend/` berisi HTML, CSS, dan vanilla JavaScript.
+2. **HTTP/API** — `src/app.py` menyediakan route web dan JSON API.
+3. **Validasi** — Pydantic memvalidasi request; `src/validator.py` dipakai oleh shared pipeline.
+4. **Application flow** — `analyze_text()` di `src/main.py` memanggil analyzer tanpa membaca/menulis file.
+5. **Provider** — `src/llm.py` memilih mock, Gemini, atau OpenAI.
+6. **Schema dan scoring** — `src/schemas.py` membentuk result dan menghitung skor secara deterministik.
 
-## Diagram Provider
+## Diagram
 
 ```mermaid
-flowchart LR
-    MAIN[src/main.py] --> IFACE[JobAnalyzer / src/llm.py]
-    IFACE --> MOCK[MockAnalyzer]
-    IFACE --> GEMINI[GeminiAnalyzer]
-    IFACE --> OPENAI[OpenAIAnalyzer]
-    MOCK --> SCHEMA[AnalysisResult / scoring]
-    GEMINI --> SCHEMA
-    OPENAI --> SCHEMA
-    SCHEMA --> OUTPUT[output/result.json]
+flowchart TD
+    FORM[Browser form] --> FETCH[fetch JSON]
+    FETCH --> API[POST /api/analyze]
+    API --> REQ[Pydantic AnalyzeRequest]
+    REQ --> CORE[analyze_text]
+    CORE --> PROVIDER[JobAnalyzer]
+    PROVIDER --> GEM[Gemini]
+    PROVIDER --> OAI[OpenAI]
+    PROVIDER --> MOCK[Mock]
+    GEM --> RESULT[AnalysisResult]
+    OAI --> RESULT
+    MOCK --> RESULT
+    RESULT --> JSON[JSON response]
+    JSON --> VIEW[Result UI]
 ```
 
-## Prinsip Desain
+## Keputusan Teknis
 
-- Provider mengikuti kontrak `JobAnalyzer.analyze(job_description, candidate_profile)`.
-- Scoring deterministik berada di aplikasi agar provider berbagi aturan yang sama.
-- Provider mock memungkinkan pipeline diuji tanpa API key atau jaringan.
-- Kunci provider dibaca dari `.env` dan tidak disimpan dalam kode sumber.
+- Shared analysis function menjaga aturan validasi dan provider tetap sama untuk CLI dan web.
+- Provider diinjeksi ke `create_app()` agar endpoint dapat dites tanpa kredensial.
+- Health check tidak menginisialisasi provider, sehingga tetap hidup saat provider belum siap.
+- Static assets dilayani pada origin yang sama; V1 tidak membutuhkan CORS.
+- API key hanya dibaca backend dari environment.
+- Tidak ada database, autentikasi, atau fallback otomatis untuk V1.

@@ -1,0 +1,89 @@
+<!doctype html>
+<html lang="id">
+  <head>
+    <meta charset="utf-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1">
+    <meta name="theme-color" content="#f3f5fb">
+    <title>AI Job Research Assistant</title>
+    <link rel="preconnect" href="https://fonts.googleapis.com">
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+    <link href="https://fonts.googleapis.com/css2?family=Plus+Jakarta+Sans:wght@400;500;600;700;800&display=swap" rel="stylesheet">
+    <link rel="stylesheet" href="/static/style.css">
+    <script src="/static/app.js" defer></script>
+  </head>
+  <body>
+    <main class="page-shell">
+      <header class="hero">
+        <p class="brand"><span class="brand-mark" aria-hidden="true"></span>AI Job Research Assistant</p>
+        <h1>Seberapa cocok kamu dengan lowongan ini?</h1>
+        <p class="intro">Tempel deskripsi pekerjaan dan profil kandidat. Kamu akan mendapat skor kecocokan, skill yang sudah sesuai, dan skill yang masih perlu dipelajari.</p>
+      </header>
+
+      <form id="analysis-form" class="panel form-panel">
+        <div class="field">
+          <div class="field-head">
+            <span class="step" aria-hidden="true">1</span>
+            <div class="field-title">
+              <label for="job-description">Job Description</label>
+              <p class="hint">Salin dari lowongan: tanggung jawab dan kualifikasi yang dicari.</p>
+            </div>
+          </div>
+          <textarea id="job-description" name="job_description" rows="9" maxlength="100000" placeholder="Tempel deskripsi pekerjaan di sini..." required></textarea>
+          <p class="counter" data-counter-for="job-description" aria-hidden="true">0 karakter</p>
+        </div>
+
+        <div class="field">
+          <div class="field-head">
+            <span class="step" aria-hidden="true">2</span>
+            <div class="field-title">
+              <label for="candidate-profile">Candidate Profile</label>
+              <p class="hint">Isi dengan ringkasan, pengalaman, dan keterampilan kandidat.</p>
+            </div>
+          </div>
+          <textarea id="candidate-profile" name="candidate_profile" rows="7" maxlength="100000" placeholder="Tempel profil, pengalaman, dan keterampilan kandidat di sini..." required></textarea>
+          <p class="counter" data-counter-for="candidate-profile" aria-hidden="true">0 karakter</p>
+        </div>
+
+        <div class="form-footer">
+          <p class="privacy-note">Teks dikirim ke server untuk dianalisis. Jangan masukkan informasi yang tidak ingin diproses oleh penyedia AI.</p>
+          <button id="analyze-button" type="submit"><span>Analisis kecocokan</span><span class="btn-icon" aria-hidden="true">→</span></button>
+        </div>
+        <p id="error-message" class="error-message" role="alert" hidden></p>
+      </form>
+
+      <section id="result" class="panel result-panel" aria-live="polite" hidden>
+        <div class="result-heading">
+          <div class="score-badge" id="score-badge">
+            <strong id="match-score">0%</strong>
+            <span>match</span>
+          </div>
+          <div class="result-title">
+            <p class="result-label">Hasil analisis untuk posisi</p>
+            <h2 id="job-title">Job title</h2>
+            <p id="recommendation" class="recommendation"></p>
+          </div>
+        </div>
+
+        <div class="skill-grid">
+          <section class="skill-card skill-required">
+            <h3>Required Skills <span class="count" id="required-count">0</span></h3>
+            <p class="skill-hint">Yang diminta oleh lowongan</p>
+            <ul id="required-skills"></ul>
+          </section>
+          <section class="skill-card skill-matching">
+            <h3>Matching Skills <span class="count" id="matching-count">0</span></h3>
+            <p class="skill-hint">Sudah dimiliki kandidat</p>
+            <ul id="matching-skills"></ul>
+          </section>
+          <section class="skill-card skill-missing">
+            <h3>Missing Skills <span class="count" id="missing-count">0</span></h3>
+            <p class="skill-hint">Perlu dipelajari atau ditambahkan</p>
+            <ul id="missing-skills"></ul>
+          </section>
+        </div>
+      </section>
+
+      <footer><span>AI Job Research</span><span>Gunakan hasil sebagai bahan pertimbangan.</span></footer>
+    </main>
+  </body>
+</html>
