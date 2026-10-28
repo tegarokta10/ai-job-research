@@ -1,17 +1,21 @@
 {
-  "job_title": "Tidak disebutkan",
+  "job_title": "Data Analyst Game",
   "required_skills": [
     "python",
     "sql",
-    "data analysis"
+    "data analysis",
+    "unity programmer",
+    "game designer"
   ],
   "matching_skills": [
     "python",
-    "sql"
+    "sql",
+    "data analysis",
+    "unity programmer"
   ],
   "missing_skills": [
-    "data analysis"
+    "game designer"
   ],
-  "match_score": 67,
-  "recommendation": "Pertimbangkan"
+  "match_score": 80,
+  "recommendation": "Cocok"
 }

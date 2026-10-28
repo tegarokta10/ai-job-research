@@ -3,19 +3,24 @@
 import json
 from pathlib import Path
 
-from mock_llm import analyze
+from llm import JobAnalyzer, get_analyzer
 from validator import validate_text
 
 ROOT = Path(__file__).resolve().parents[1]
 
 
-def run_analysis(job_path: Path | None = None, profile_path: Path | None = None) -> dict:
+def run_analysis(
+    job_path: Path | None = None,
+    profile_path: Path | None = None,
+    output_path: Path | None = None,
+    analyzer: JobAnalyzer | None = None,
+) -> dict:
     job_file = job_path or ROOT / "data" / "job_description.txt"
     profile_file = profile_path or ROOT / "data" / "candidate_profile.txt"
     job = validate_text(job_file.read_text(encoding="utf-8"), "Deskripsi pekerjaan")
     profile = validate_text(profile_file.read_text(encoding="utf-8"), "Profil kandidat")
-    result = analyze(job, profile).to_dict()
-    output_file = ROOT / "output" / "result.json"
+    result = (analyzer or get_analyzer()).analyze(job, profile).model_dump()
+    output_file = output_path or ROOT / "output" / "result.json"
     output_file.parent.mkdir(parents=True, exist_ok=True)
     output_file.write_text(json.dumps(result, ensure_ascii=False, indent=2) + "\n", encoding="utf-8")
     return result
