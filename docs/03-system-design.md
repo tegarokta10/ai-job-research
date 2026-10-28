@@ -1,57 +1,51 @@
-                   USER
-                     │
-                     ▼
-             Job Description
-                     │
-                     ▼
-              Input Processor
-                     │
-                     ▼
-                LLM Agent
-                     │
-          ┌──────────┼──────────┐
-          ▼          ▼          ▼
-      Extract     Compare     Score
-      Skills      Profile     Match
-          │          │          │
-          └──────────┼──────────┘
-                     ▼
-              Structured JSON
-                     │
-                     ▼
-                Result Store
-                     │
-                     ▼
-                  Output
+# Desain Sistem
 
-
-# System Design
-
-## Components
+## Komponen
 
 ### Input Processor
-Receives and validates job description.
+
+`src/main.py` membaca `data/job_description.txt` dan `data/candidate_profile.txt`. `src/validator.py` memastikan kedua input berisi teks.
 
 ### Analyzer Abstraction
-`src/llm.py` memilih implementasi melalui `LLM_PROVIDER`.
 
-- `mock`: analyzer lokal berbasis kata kunci untuk pengembangan offline.
-- `openai`: `src/openai_llm.py` memakai OpenAI Responses API dan Structured Outputs untuk mengambil judul serta skill.
-- `gemini`: `src/gemini_llm.py` memakai Google Gen AI SDK dan JSON terstruktur untuk mengambil judul serta skill.
+`src/llm.py` membaca `LLM_PROVIDER` dari environment atau `.env`, lalu memilih implementasi:
 
-Skor, skill yang kurang, dan rekomendasi dihitung secara deterministik oleh aplikasi di `src/schemas.py`.
+- `mock`: `src/mock_llm.py`, pencocokan kata kunci lokal untuk pengembangan offline.
+- `openai`: `src/openai_llm.py`, OpenAI Responses API dengan output terstruktur.
+- `gemini`: `src/gemini_llm.py`, Google Gen AI SDK dengan JSON terstruktur.
 
-### Output Processor
-Converts the LLM response into structured data.
+### Result Schema dan Scoring
 
-### Storage
-Stores the analysis results for later review.
+`src/schemas.py` mendefinisikan `AnalysisResult`, menormalkan nama skill, menghilangkan duplikasi, menghitung skill yang belum cocok, skor, dan rekomendasi. Skor serta rekomendasi dihitung aplikasi, bukan dipercaya dari keluaran model.
 
-## Request Flow
+### Output
 
-1. `src/main.py` membaca dan memvalidasi dua berkas masukan.
-2. Provider terpilih menganalisis judul, skill wajib, dan skill kandidat yang cocok.
-3. Aplikasi menormalisasi daftar skill, lalu menghitung skor dan rekomendasi.
-4. Hasil tervalidasi ditulis ke `output/result.json`.
+`src/main.py` menulis hasil tervalidasi sebagai JSON UTF-8 ke `output/result.json`.
 
-OpenAI provider memerlukan `OPENAI_API_KEY`, dan Gemini memerlukan `GEMINI_API_KEY` pada `.env`; provider lokal tidak membutuhkan koneksi jaringan.
+## Alur Data
+
+```mermaid
+flowchart TD
+    U[Pengguna mengubah berkas input] --> M[src/main.py]
+    M --> V[Validasi teks]
+    V --> S[Pilih provider lewat LLM_PROVIDER]
+    S -->|mock| MOCK[src/mock_llm.py]
+    S -->|openai| OAI[src/openai_llm.py]
+    S -->|gemini| GEM[src/gemini_llm.py]
+    MOCK --> R[Normalisasi dan hitung skor]
+    OAI --> R
+    GEM --> R
+    R --> P[Validasi AnalysisResult]
+    P --> J[output/result.json]
+```
+
+## Konfigurasi
+
+- Gemini membutuhkan `GEMINI_API_KEY` dan dapat memakai `GEMINI_MODEL`.
+- OpenAI membutuhkan `OPENAI_API_KEY` dan dapat memakai `OPENAI_MODEL`.
+- Provider `mock` tidak membutuhkan internet atau kredensial.
+- `.env` tidak boleh dimasukkan ke Git.
+
+## Penanganan Kegagalan
+
+Input kosong menghasilkan `ValueError`. Kegagalan jaringan atau provider live saat ini diteruskan oleh SDK dan dapat menghentikan eksekusi; pesan error ramah pengguna dan strategi retry aplikasi menjadi pekerjaan lanjutan.

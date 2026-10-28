@@ -1,36 +1,33 @@
-# Problem Statement
+# Pernyataan Masalah
 
-## Background
+## Latar Belakang
 
-Searching for relevant job opportunities requires candidates
-to manually read multiple job descriptions and compare them
-with their own skills and experience.
+Pencari kerja perlu membaca deskripsi lowongan dan membandingkan persyaratannya dengan keterampilan serta pengalaman mereka. Proses manual ini berulang, memakan waktu, dan menyulitkan kandidat menilai kesesuaian secara konsisten.
 
-## Problem
+## Tujuan
 
-The process is repetitive and time-consuming.
+Membangun AI Job Research, sebuah pipeline yang menganalisis satu deskripsi pekerjaan terhadap satu profil kandidat dan menghasilkan ringkasan kecocokan dalam format JSON.
 
-A candidate needs to:
+## Ruang Lingkup Versi Saat Ini
 
-1. Find job listings
-2. Read job descriptions
-3. Identify required skills
-4. Compare requirements with their skills
-5. Determine whether the position is suitable
-6. Track interesting opportunities
+- Masukan dibaca dari `data/job_description.txt` dan `data/candidate_profile.txt`.
+- Analyzer dapat dipilih melalui `LLM_PROVIDER`: `mock`, `openai`, atau `gemini`.
+- Hasil ditulis ke `output/result.json`.
+- Judul lowongan, skill yang diminta, skill yang cocok, skill yang belum cocok, skor, dan rekomendasi dimasukkan ke hasil.
 
-## Goal
+Versi saat ini adalah prototipe command line. Pencarian lowongan otomatis, antarmuka web, basis data, dan endpoint HTTP belum termasuk implementasi.
 
-Build an AI-powered assistant that can analyze job descriptions
-and determine their relevance to a candidate's profile.
+## Hasil yang Diharapkan
 
-## Expected Outcome
+```json
+{
+  "job_title": "Data Analyst",
+  "required_skills": ["python", "sql"],
+  "matching_skills": ["python"],
+  "missing_skills": ["sql"],
+  "match_score": 50,
+  "recommendation": "Pertimbangkan"
+}
+```
 
-The system should produce:
-
-- Job information
-- Required skills
-- Matching skills
-- Missing skills
-- Match score
-- Recommendation
+Skor dihitung aplikasi dari proporsi skill wajib yang cocok. Rekomendasi memakai ambang yang ditetapkan di kode; hasil ini alat bantu evaluasi dan bukan keputusan perekrutan.

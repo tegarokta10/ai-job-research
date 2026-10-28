@@ -1,63 +1,39 @@
-# Test Plan
+# Rencana dan Hasil Pengujian
 
-## 1. Objective
+## Tujuan
 
-Pengujian memastikan pipeline AI Job Research dapat:
+Memastikan input divalidasi, analyzer menghasilkan data terstruktur, judul lowongan dikenali, skor dihitung konsisten, dan hasil dapat disimpan ke JSON.
 
-- membaca deskripsi pekerjaan dan profil kandidat;
-- menolak masukan yang kosong atau bukan teks;
-- menemukan keterampilan yang didukung analyzer lokal dan membandingkannya;
-- menghasilkan skor dan rekomendasi yang konsisten;
-- mengembalikan hasil dengan struktur yang ditentukan;
-- menyimpan hasil pada `output/result.json`.
-
-## 2. Test Environment
+## Lingkungan
 
 - OS: Windows
-- Python: 3.10 atau lebih baru
+- Python: 3.14.4 pada virtualenv di direktori workspace induk
 - Framework: `unittest` dari standard library
-- Analyzer offline: pencocokan kata kunci lokal (`src/mock_llm.py`)
-- Provider OpenAI dan Gemini: uji unit memakai client tiruan; tidak mengirim permintaan jaringan
+- Uji provider OpenAI dan Gemini memakai client tiruan; tidak mengirim request jaringan
 
-Jalankan perintah dari direktori utama proyek.
+Jalankan perintah dari direktori proyek:
 
-## 3. Test Cases
+```powershell
+..\.venv\Scripts\python.exe -m unittest discover -s tests -v
+```
 
-| ID | Test case | Hasil yang diharapkan |
+## Kasus Pengujian Otomatis
+
+| ID | Kasus | Hasil yang diharapkan |
 |---|---|---|
-| TC-01 | Masukan valid dengan skill yang cocok dan tidak cocok | Skill terbagi ke daftar cocok dan kurang; skor dihitung dari skill yang ditemukan |
-| TC-02 | Deskripsi pekerjaan kosong | Validasi melempar `ValueError` |
-| TC-03 | Profil kandidat kosong | Validasi melempar `ValueError` |
-| TC-04 | Menjalankan pipeline dengan file masukan | Hasil berupa objek JSON dengan field sesuai skema |
-| TC-05 | Menjalankan pipeline | Hasil disimpan sebagai JSON valid di `output/result.json` |
-| TC-06 | Judul ditulis dengan label seperti `Posisi:` | Judul diekstrak dari baris pertama |
-| TC-07 | Provider OpenAI diberi client tiruan | Hasil terstruktur dinormalisasi dan skor dihitung oleh aplikasi |
-| TC-08 | Provider Gemini diberi client tiruan | Hasil terstruktur dinormalisasi dan skor dihitung oleh aplikasi |
+| TC-01 | Input kosong | Validasi melempar `ValueError` |
+| TC-02 | Lowongan memiliki skill cocok dan tidak cocok | Daftar skill, skor, dan rekomendasi sesuai input |
+| TC-03 | Judul memiliki label `Posisi:` | Judul diekstrak dengan benar |
+| TC-04 | Pipeline memakai berkas masukan dan output sementara | JSON berisi field skema dan tersimpan di lokasi output |
+| TC-05 | Provider OpenAI diberi client tiruan | Hasil OpenAI diproses tanpa jaringan |
+| TC-06 | Provider Gemini diberi client tiruan | Hasil Gemini diproses tanpa jaringan |
 
-## 4. Test Execution
+## Hasil Terakhir
 
-Jalankan tes otomatis:
+Pada 28 Oktober 2026, perintah otomatis di atas menghasilkan **4 tes lulus dan 0 gagal**. Cakupannya meliputi input kosong, pipeline dan `job_title`, serta adaptor OpenAI dan Gemini dengan client tiruan.
 
-```bash
-python -m unittest discover -s tests -v
-```
+`output/result.json` saat dokumen ini diperbarui berisi hasil untuk lowongan **Data Analyst Game**: 5 skill wajib, 4 cocok, skor **80**, rekomendasi **Cocok**. Skema output belum menyimpan nama provider maupun waktu eksekusi.
 
-Uji alur aplikasi secara manual dengan contoh berkas:
+## Uji Provider Live
 
-```bash
-python src/main.py
-```
-
-Periksa `output/result.json` untuk memastikan output dapat dibaca sebagai JSON dan berisi `job_title`, `required_skills`, `matching_skills`, `missing_skills`, `match_score`, serta `recommendation`. Tes otomatis tidak memanggil layanan AI; uji langsung memerlukan API key dan dapat memakai kuota akun.
-
-## 5. Test Results
-
-Eksekusi terakhir: 28 Oktober 2026.
-
-```text
-Command: ..\.venv\Scripts\python.exe -m unittest discover -s tests -v
-Result: 4 tests passed, 0 failed.
-Coverage: validasi input kosong, pipeline dan ekstraksi job_title, serta OpenAIAnalyzer dan GeminiAnalyzer dengan client tiruan (tanpa request jaringan).
-```
-
-Tes live Gemini dicoba dua kali setelah tes offline, tetapi API mengembalikan `503 UNAVAILABLE` karena model mengalami permintaan tinggi. Tidak ada hasil live baru yang ditulis ke `output/result.json`.
+Dalam percobaan live Gemini pada 28 Oktober 2026, API dua kali mengembalikan `503 UNAVAILABLE` karena model sedang ramai. File hasil yang saat ini tersedia tidak membuktikan bahwa percobaan tersebut berhasil; ulangi `python src/main.py` untuk memastikan hasil live terbaru. Panggilan live mengirim deskripsi pekerjaan dan profil kandidat ke penyedia model serta dapat memakai kuota akun.
